@@ -38,9 +38,10 @@ app.post('/add-book', (req, res) => {
             let isUnique = true;
             // Check if ISBN exists
             data.split('\n').forEach(entry =>{
-                if(entry.split(',')[1] == req.body.isbn)
+                if (entry.split(',')[1] == req.body.isbn)
                     isUnique = false;
             });
+            // Add only if ISBN is unique
             isUnique?addBook(status, req, res):res.send(status);
             
         } catch (err){
@@ -52,12 +53,55 @@ app.post('/add-book', (req, res) => {
 
 // GET endpoint for /find-by-isbn-author
 app.get('/find-by-isbn-author', (req, res) => {
-    console.log(req.query);
+    try{
+        // Read books.txt
+        const data = readFileSync('./books.txt', 
+        { encoding: 'utf-8', flag: 'r'});
+
+        // Find matching details
+        let found = false
+        let response = '';
+        data.split('\n').some(entry => {
+            let book = entry.split(',');
+            if (book[1] == req.query.isbn
+                && book[2] == req.query.author
+            ) {
+                response += `<h4>${book[0]}, ${book[1]}, ${book[2]}, ${book[3]}</h4>`
+                found = true;
+                return true;
+            }
+        });
+        found?res.send(response):res.send('<h1>Book not found</h1>');
+
+    } catch (err) {
+        console.log(err);
+        res.send('<h1>An error occurred</h1>');
+    }
 });
 
 // GET endpoint for /find-by-author
 app.get('/find-by-author', (req, res) => {
-    console.log(req.query);
+    try{
+        // Read books.txt
+        const data = readFileSync('./books.txt', 
+        { encoding: 'utf-8', flag: 'r'});
+
+        // Find matching details and prepare the response
+        let found = false
+        let response = '';
+        data.split('\n').forEach(entry => {
+            let book = entry.split(',');
+            if (book[2] == req.query.author) {
+                response += `<h4>${book[0]}, ${book[1]}, ${book[2]}, ${book[3]}</h4>`
+                found = true;
+            }
+        });
+        found?res.send(response):res.send('<h1>Book not found</h1>');
+
+    } catch (err) {
+        console.log(err);
+        res.send('<h1>An error occurred</h1>');
+    }
 })
 
 // Start the server at port 3000
